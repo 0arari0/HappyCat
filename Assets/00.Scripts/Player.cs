@@ -13,14 +13,13 @@ public class Player : MonoBehaviour
     void OnEnable()
     {
         curHp = maxHp;
-        isMoving = false;
+        isWalking = false;
         isRunning = false;
         isJumping = false;
         isExhausted = false;
         prevTime = 0f;
         speedMultiplier = 1f;
         speedDivider = 1f;
-        
     }
 
     void Update()
@@ -34,7 +33,7 @@ public class Player : MonoBehaviour
     void OnCollisionEnter(Collision collision)
     {
         var gameObject = collision.gameObject;
-        if (gameObject.CompareTag("Ground") || gameObject.CompareTag("Rock"))
+        if (gameObject.CompareTag(Tag.GROUND) || gameObject.CompareTag(Tag.ROCK))
             isJumping = false;
     }
 
@@ -51,14 +50,15 @@ public class Player : MonoBehaviour
     {
         healAmount = Mathf.Abs(healAmount);
         curHp += healAmount;
+        isExhausted = false;
         if (curHp > maxHp)
             curHp = maxHp;
     }
 
     void Move()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        float h = Input.GetAxis(Axis.HORIZONTAL);
+        float v = Input.GetAxis(Axis.VERTICAL);
 
         if (Input.GetKey(KeyCode.LeftShift))
             isRunning = true;
@@ -68,7 +68,7 @@ public class Player : MonoBehaviour
         #region 움직일 때마다 체력 서서히 감소
         if (!(h == 0 && v == 0)) // 움직일 때
         {
-            isMoving = true;
+            isWalking = true;
             speedDivider = isExhausted ? 0.5f : 1f;
             if (isRunning && !isExhausted) // 뛸 때 & 지치지 않았을 때
             {
@@ -83,7 +83,7 @@ public class Player : MonoBehaviour
             Canvas.instance.UpdateTiredBar(curHp, maxHp);
         }
         else // 멈춰있을 때
-            isMoving = false;
+            isWalking = false;
         #endregion
 
         transform.Translate((Vector3.forward * v + Vector3.right * h).normalized * moveSpeed * speedMultiplier * speedDivider * Time.deltaTime);
@@ -91,7 +91,7 @@ public class Player : MonoBehaviour
 
     void Rotate()
     {
-        float vr = Input.GetAxis("Mouse X");
+        float vr = Input.GetAxis(Axis.MOUSE_X);
 
         transform.Rotate(Vector3.up * vr * rotateSpeed * Time.deltaTime);
     }
@@ -107,7 +107,7 @@ public class Player : MonoBehaviour
 
     void AutoHeal()
     {
-        if (!isMoving && !isJumping) // 가만히 있을 때
+        if (!isWalking && !isJumping) // 가만히 있을 때
         {
             if (Time.time - prevTime > 3f) // 3초가 지났다면
             {
@@ -128,7 +128,7 @@ public class Player : MonoBehaviour
     public float autoHealDelta;
 
     [Header("State Variables")]
-    public bool isMoving;
+    public bool isWalking;
     public bool isRunning;
     public bool isJumping;
     public bool isExhausted;
